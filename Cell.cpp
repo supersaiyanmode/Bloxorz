@@ -7,7 +7,7 @@
 
 #include "soil/SOIL.h"
 #include "Cell.h"
-
+extern double CELL_WIDTH;
 namespace {
     bool fileExists(std::string fileName){
         FILE* img = NULL;
@@ -32,7 +32,7 @@ namespace {
         glBindTexture( GL_TEXTURE_2D, texture ); //bind the texture to it's array
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-        
+        std::cout<<"Loaded texture: "<<s<<std::endl;
         //add to map
         textureMap[s] = texture;
         return texture;
@@ -70,6 +70,9 @@ namespace {
     };
     
     void drawBox(GLfloat size, GLenum type){
+        double tileThickness = 0.2;
+        glTranslated(0,(CELL_WIDTH-CELL_WIDTH*tileThickness/2)/2.0,0);
+        glScaled(1,tileThickness,1);
         for (int i = 5; i >= 0; i--) {
             if (i==1)
                 glBindTexture(GL_TEXTURE_2D, loadTexture("images/furnitureLight.bmp"));
@@ -79,7 +82,7 @@ namespace {
             glNormal3fv(&n[i][0]);
             glTexCoord2f(1,0);  glVertex3fv(&v[faces[i][0]][0]);
             glTexCoord2f(1,1);  glVertex3fv(&v[faces[i][1]][0]);
-            glTexCoord2f(1,0);  glVertex3fv(&v[faces[i][2]][0]);
+            glTexCoord2f(0,1);  glVertex3fv(&v[faces[i][2]][0]);
             glTexCoord2f(0,0);  glVertex3fv(&v[faces[i][3]][0]);
             glEnd();
         }

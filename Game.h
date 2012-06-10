@@ -7,8 +7,10 @@
 #include "Box.h"
 
 class Game{
-    int windowWidth, windowHeight;
     bool invalid;
+    int windowWidth, windowHeight;
+    int moves;
+    std::string mapFile;
     BloxorzMap map;
     Box box;
 public:

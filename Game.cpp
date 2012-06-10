@@ -5,14 +5,12 @@
 #include "Game.h"
 
 Game::Game(const std::string& file, int w, int h):
-            windowWidth(w), windowHeight(h),invalid(true),map(file),box(0,0,0,1){
+            invalid(true),windowWidth(w), windowHeight(h),moves(0),
+            mapFile(file), map(file),box(0,0,0,1){
     if (!glfwInit() || !glfwOpenWindow(windowWidth,windowHeight, 8,8,8,8,24,0,GLFW_WINDOW)){
         glfwTerminate();
         throw 1;
     }
-    int r1,c1,r2,c2;
-    map.getBox(r1,c1,r2,c2);
-    box = Box(r1,c1,r2,c2);
 }
 
 Game::~Game(){
@@ -29,8 +27,12 @@ void Game::init(){
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
-    
+ 
+    int r1,c1,r2,c2;
     map.init();
+    map.getBox(r1,c1,r2,c2);
+    box = Box(r1,c1,r2,c2);
+    box.init();
 }
 
 void Game::loop(){
@@ -76,29 +78,38 @@ bool Game::paint(){
     gluLookAt(7, 12, 28, 7, 0, 0, 0, 1, 0);
 #endif
     bool stillInvalid = false;;
-    if (map.paint())
+    if (1 && map.paint())
         stillInvalid = true;
     if (box.paint())
         stillInvalid = true;
+
     return stillInvalid;
 }
 
 void Game::processKeys(){
     if (glfwGetKey(GLFW_KEY_LEFT)==GLFW_PRESS){
         invalid = true;
+        moves++;
         box.moveLeft();
     }
     else if (glfwGetKey(GLFW_KEY_RIGHT)==GLFW_PRESS){
         invalid = true;
+        moves++;
         box.moveRight();
     }
     else if (glfwGetKey(GLFW_KEY_UP)==GLFW_PRESS){
         invalid = true;
+        moves++;
         box.moveUp();
     }
     else if (glfwGetKey(GLFW_KEY_DOWN)==GLFW_PRESS){
         invalid = true;
+        moves++;
         box.moveDown();
+    }
+    else if (glfwGetKey('R')==GLFW_PRESS){
+        init();
+        invalid = true;
     }
 }
 

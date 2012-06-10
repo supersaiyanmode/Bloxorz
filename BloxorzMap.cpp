@@ -2,6 +2,9 @@
 #include <sstream>
 #include <algorithm>
 #include <iostream>
+
+#include <GL/gl.h>
+
 #include "BloxorzMap.h"
 
 namespace {
@@ -40,23 +43,7 @@ namespace {
 
 
 BloxorzMap::BloxorzMap(const std::string& f):mapFile(f){
-    std::ifstream file(f.c_str());
-    std::stringstream ss;
-    ss<<file.rdbuf();
-    mapStr = splitString(ss.str(),"\n");
-    std::transform(mapStr.begin(), mapStr.end(), mapStr.begin(), trimString);
     
-    const std::string VALID_CHARS = " X+";
-    
-    for (int i=0, len1=mapStr.size(); i<len1; i++){
-        std::vector<Cell> row;
-        for (int j=0, len2=mapStr[i].length(); j<len2; j++){
-            if (VALID_CHARS.find(mapStr[i][j]) == std::string::npos)
-                continue;
-            row.push_back(Cell(mapStr[i][j], i, j));
-        }
-        map.push_back(row);
-    }
 }
 
 Cell BloxorzMap::get(int r, int c) const{
@@ -82,6 +69,26 @@ void BloxorzMap::getBox(int& r1, int& c1, int& r2, int& c2) const{
 }
 
 void BloxorzMap::init(){
+    map = std::vector<std::vector<Cell> >();
+    
+    std::ifstream file(mapFile.c_str());
+    std::stringstream ss;
+    ss<<file.rdbuf();
+    mapStr = splitString(ss.str(),"\n");
+    std::transform(mapStr.begin(), mapStr.end(), mapStr.begin(), trimString);
+    
+    const std::string VALID_CHARS = " X+";
+    
+    for (int i=0, len1=mapStr.size(); i<len1; i++){
+        std::vector<Cell> row;
+        for (int j=0, len2=mapStr[i].length(); j<len2; j++){
+            if (VALID_CHARS.find(mapStr[i][j]) == std::string::npos)
+                continue;
+            row.push_back(Cell(mapStr[i][j], i, j));
+        }
+        map.push_back(row);
+    }
+    
     for (std::vector<std::vector<Cell> >::iterator it1=map.begin(); it1!= map.end(); it1++){
         for (std::vector<Cell>::iterator it2=it1->begin(); it2!=it1->end(); it2++){
             it2->init();
@@ -91,11 +98,20 @@ void BloxorzMap::init(){
 
 bool BloxorzMap::paint(){
     bool stillInvalid = false;
-    for (std::vector<std::vector<Cell> >::iterator it1=map.begin(); it1!= map.end(); it1++){
-        for (std::vector<Cell>::iterator it2=it1->begin(); it2!=it1->end(); it2++){
-            if (it2->paint())
-                stillInvalid = true;
-        }
+    static GLuint paintList = 0;
+    if (!paintList){
+        paintList = 1;
+        glNewList(paintList, GL_COMPILE_AND_EXECUTE);
+            for (std::vector<std::vector<Cell> >::iterator it1=map.begin(); it1!= map.end();
+                            it1++){
+                for (std::vector<Cell>::iterator it2=it1->begin(); it2!=it1->end(); it2++){
+                    if (it2->paint())
+                        stillInvalid = true;
+                }
+            }
+        glEndList();
+    }else{
+        glCallList(paintList);
     }
     return stillInvalid;
 }

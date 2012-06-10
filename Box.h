@@ -8,6 +8,7 @@ class Box {
     double rotX, rotZ;
     double newPosX, newPosY, newPosZ;
     double newRotX, newRotZ;
+    double deltaFulcrumX, deltaFulcrumY, deltaFulcrumZ;
     
     bool falling;
     int animating; //0 if not animating, else progress [1-10]

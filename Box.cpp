@@ -32,7 +32,7 @@ namespace {
         glBindTexture( GL_TEXTURE_2D, texture ); //bind the texture to it's array
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-        
+        std::cout<<"Loaded texture: "<<s<<std::endl;
         //add to map
         textureMap[s] = texture;
         return texture;
@@ -70,13 +70,22 @@ namespace {
     };
     
     void drawBox(GLfloat size, GLenum type){
+        glDisable(GL_TEXTURE_2D);
+        
+        glBegin(GL_LINES);
+            glColor3f(1,0,0);   glVertex3f(0,0,0); glVertex3f(100,0,0);
+            glColor3f(0,1,0);   glVertex3f(0,0,0); glVertex3f(0,100,0);
+            glColor3f(0,0,1);glVertex3f(0,0,0); glVertex3f(0,0,1000);
+        glEnd();
+        glColor3f(1,1,1);
+        glEnable(GL_TEXTURE_2D);
         for (int i = 5; i >= 0; i--) {
             glBindTexture(GL_TEXTURE_2D, loadTexture("images/BoxTexture.bmp"));
             glBegin(type);
                 glNormal3fv(&n[i][0]);
                 glTexCoord2f(1,0);  glVertex3fv(&v[faces[i][0]][0]);
                 glTexCoord2f(1,1);  glVertex3fv(&v[faces[i][1]][0]);
-                glTexCoord2f(1,0);  glVertex3fv(&v[faces[i][2]][0]);
+                glTexCoord2f(0,1);  glVertex3fv(&v[faces[i][2]][0]);
                 glTexCoord2f(0,0);  glVertex3fv(&v[faces[i][3]][0]);
             glEnd();
         }
@@ -133,39 +142,46 @@ void Box::init(){
 
 bool Box::paint(){
     glPushMatrix();
-    const int ANIMATION_STEPS = 5;
+    const int ANIMATION_STEPS = 50;
     bool stillInvalid;
     if (animating){
 #define X(A,B,r) ((A) + ((B)-(A))*(r))
-        glTranslated(X(posX,newPosX,double(animating)/ANIMATION_STEPS),
+        /*glTranslated(X(posX,newPosX,double(animating)/ANIMATION_STEPS),
                      X(posY,newPosY,double(animating)/ANIMATION_STEPS),
                      X(posZ,newPosZ,double(animating)/ANIMATION_STEPS));
         glRotated(X(rotX,newRotX,double(animating)/ANIMATION_STEPS), 1, 0, 0);
-        glRotated(X(rotZ,newRotZ,double(animating)/ANIMATION_STEPS), 0, 0, 1);
-        glScaled(1,2,1);
+        glRotated(X(rotZ,newRotZ,double(animating)/ANIMATION_STEPS), 0, 0, 1);*/
+        
+        glTranslated(posX, posY, posZ);
+//         glTranslated(X(posX,newPosX,double(animating)/ANIMATION_STEPS),
+//                      X(posY,newPosY,double(animating)/ANIMATION_STEPS),
+//                      X(posZ,newPosZ,double(animating)/ANIMATION_STEPS));
+        
+        glTranslated(deltaFulcrumX, deltaFulcrumY, deltaFulcrumZ);
+        glRotated(X(0,newRotX-rotX,double(animating)/ANIMATION_STEPS), 1, 0, 0);
+        glRotated(X(0,newRotZ-rotZ,double(animating)/ANIMATION_STEPS), 0, 0, 1);
+        glTranslated(-deltaFulcrumX, -deltaFulcrumY, -deltaFulcrumZ);
+        
+        glScaled(1+(align==ALIGN_X),1+(align==ALIGN_Y),1+(align==ALIGN_Z));
         drawBox(CELL_WIDTH, GL_QUADS);
         animating = (animating+1)%ANIMATION_STEPS;
         if (!animating){
-            posX = newPosX; posY = newPosY; posZ = newPosZ;
-            rotX = newRotX; /*rotY = newRotY;*/ rotZ = newRotZ;
-            align = newAlign;
-            std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") | ";
-            std::cout<<"["<<align<<"]\n";
-//             rotX += 360.0;
-//             while (rotX >= 360.0)
-//                 rotX -= 360.0;
-//             rotZ += 360.0;
-//             while (rotZ >= 360.0)
-//                 rotZ -= 360.0;
+            /*posX = newPosX; posY = newPosY; posZ = newPosZ;
+            rotX = newRotX; rotZ = newRotZ;
             init();
-        }
-        stillInvalid = true;
+            align = newAlign;*/
+            std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") | ";
+            std::cout<<"("<<deltaFulcrumX<<","<<deltaFulcrumY<<","<<deltaFulcrumZ<<") | ";
+            init();
+            stillInvalid = false;
+        }else
+            stillInvalid = true;
 #undef X
     }else{
         glTranslated(posX, posY, posZ);
-        glRotated(rotX, 1, 0, 0);
-        glRotated(rotZ, 0, 0, 1);
-        glScaled(1,2,1);
+        //glRotated(rotX, 1, 0, 0);
+        //glRotated(rotZ, 0, 0, 1);
+        glScaled(1+(align==ALIGN_X),1+(align==ALIGN_Y),1+(align==ALIGN_Z));
         drawBox(CELL_WIDTH, GL_QUADS);
         stillInvalid = false;
     }
@@ -181,6 +197,11 @@ void Box::moveLeft(){
             newPosX = posX - 1.5*CELL_WIDTH;
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ;
+            
+            deltaFulcrumX = -CELL_WIDTH;
+            deltaFulcrumY = -CELL_WIDTH/2.0;
+            deltaFulcrumZ = 0;
+            
             newAlign = ALIGN_Y;
             
             col1 = std::min(col1, col2)-1;
@@ -190,6 +211,11 @@ void Box::moveLeft(){
             newPosX = posX - 1.5*CELL_WIDTH;
             newPosY = posY - 0.5*CELL_WIDTH;
             newPosZ = posZ;
+            
+            deltaFulcrumX = -CELL_WIDTH/2.0;
+            deltaFulcrumY = -CELL_WIDTH;
+            deltaFulcrumZ = 0;
+            
             newAlign = ALIGN_X;
             
             col2 = --col1 - 1;
@@ -199,6 +225,11 @@ void Box::moveLeft(){
             newPosX = posX - CELL_WIDTH;
             newPosY = posY;
             newPosZ = posZ;
+            
+            deltaFulcrumX = -CELL_WIDTH/2.0;
+            deltaFulcrumY = -CELL_WIDTH/2.0;
+            deltaFulcrumZ = 0;
+            
             newAlign = ALIGN_Z; //no change!
             col1--;
             col2--;
@@ -219,6 +250,13 @@ void Box::moveRight(){
             newPosX = posX + 1.5*CELL_WIDTH;
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ;
+            
+//             deltaFulcrumX = -CELL_WIDTH;
+//             deltaFulcrumY = -CELL_WIDTH/2.0;
+            deltaFulcrumX = -CELL_WIDTH/2.0;
+            deltaFulcrumY = -CELL_WIDTH;
+            deltaFulcrumZ = 0;//-CELL_WIDTH;
+            
             newAlign = ALIGN_Y;
             
             col1 = std::max(col1, col2) + 1;
@@ -228,6 +266,11 @@ void Box::moveRight(){
             newPosX = posX + 1.5*CELL_WIDTH;
             newPosY = posY - 0.5*CELL_WIDTH;
             newPosZ = posZ;
+            
+            deltaFulcrumX = CELL_WIDTH/2.0;
+            deltaFulcrumY = -CELL_WIDTH;
+            deltaFulcrumZ = 0;
+            
             newAlign = ALIGN_X;
             
             col2 = ++col1 + 1;
@@ -237,6 +280,11 @@ void Box::moveRight(){
             newPosX = posX + CELL_WIDTH;
             newPosY = posY;
             newPosZ = posZ;
+            
+            deltaFulcrumX = CELL_WIDTH/2.0;
+            deltaFulcrumY = -CELL_WIDTH/2.0;
+            deltaFulcrumZ = 0;
+            
             newAlign = ALIGN_Z; //no change!
             
             col1++;
@@ -257,6 +305,11 @@ void Box::moveUp(){
             newPosX = posX;
             newPosY = posY;
             newPosZ = posZ - CELL_WIDTH;
+            
+            deltaFulcrumX = 0;
+            deltaFulcrumY = -CELL_WIDTH/2.0;
+            deltaFulcrumZ = -CELL_WIDTH/2.0;
+            
             newAlign = ALIGN_X;
             
             row1--;
@@ -266,6 +319,11 @@ void Box::moveUp(){
             newPosX = posX;
             newPosY = posY - 0.5*CELL_WIDTH;
             newPosZ = posZ - 1.5*CELL_WIDTH;
+            
+            deltaFulcrumX = 0;
+            deltaFulcrumY = -CELL_WIDTH;
+            deltaFulcrumZ = -CELL_WIDTH/2.0;
+            
             newAlign = ALIGN_Z;
             
             row2 = --row1 - 1;
@@ -275,6 +333,11 @@ void Box::moveUp(){
             newPosX = posX;
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ - 1.5*CELL_WIDTH;
+            
+            deltaFulcrumX = 0;
+            deltaFulcrumY = -CELL_WIDTH/2.0;
+            deltaFulcrumZ = -CELL_WIDTH;
+            
             newAlign = ALIGN_Y; //no change!
             
             row1 = std::min(row1,row2) - 1;
@@ -296,6 +359,11 @@ void Box::moveDown(){
             newPosX = posX;
             newPosY = posY;
             newPosZ = posZ + CELL_WIDTH;
+            
+            deltaFulcrumX = CELL_WIDTH/2.0;
+            deltaFulcrumY = 0;//-CELL_WIDTH/2.0;
+            deltaFulcrumZ = CELL_WIDTH/2.0;
+            
             newAlign = ALIGN_X;
             
             row1++;
@@ -305,6 +373,11 @@ void Box::moveDown(){
             newPosX = posX;
             newPosY = posY - 0.5*CELL_WIDTH;
             newPosZ = posZ + 1.5*CELL_WIDTH;
+            
+            deltaFulcrumX = 0;
+            deltaFulcrumY = -CELL_WIDTH;
+            deltaFulcrumZ = CELL_WIDTH/2.0;
+            
             newAlign = ALIGN_Z;
             
             row2 = ++row1 + 1;
@@ -314,6 +387,11 @@ void Box::moveDown(){
             newPosX = posX;
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ + 1.5*CELL_WIDTH;
+            
+            deltaFulcrumX = 0;
+            deltaFulcrumY = -CELL_WIDTH/2.0;
+            deltaFulcrumZ = CELL_WIDTH*1.5; //EXTRA MINUS
+            
             newAlign = ALIGN_Y; //no change!
             
             row1 = std::max(row2,row1) + 1;
