@@ -89,10 +89,30 @@ void BloxorzMap::init(){
     }
 }
 
-void BloxorzMap::paint(){
+bool BloxorzMap::paint(){
+    bool stillInvalid = false;
     for (std::vector<std::vector<Cell> >::iterator it1=map.begin(); it1!= map.end(); it1++){
         for (std::vector<Cell>::iterator it2=it1->begin(); it2!=it1->end(); it2++){
-            it2->paint();
+            if (it2->paint())
+                stillInvalid = true;
         }
     }
+    return stillInvalid;
+}
+
+std::vector<std::vector<char> > BloxorzMap::state(){
+    std::vector<std::vector<char> > res;
+    
+    for (int i=0, len1=mapStr.size(); i<len1; i++){
+        std::vector<char> row;
+        for (int j=0, len2=mapStr[i].length(); j<len2; j++){
+            if (mapStr[i][j] == '+'){
+                row.push_back('X');
+            }else{
+                row.push_back(mapStr[i][j]);
+            }
+        }
+        res.push_back(row);
+    }
+    return res;
 }

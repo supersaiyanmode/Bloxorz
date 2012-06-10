@@ -8,6 +8,7 @@
 
 class Game{
     int windowWidth, windowHeight;
+    bool invalid;
     BloxorzMap map;
     Box box;
 public:
@@ -16,7 +17,7 @@ public:
     
     void init();
     void loop();
-    void paint();
+    bool paint(); //returns if its still invalid..
     void processKeys();
 };
 

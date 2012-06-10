@@ -17,7 +17,9 @@ public:
     void getBox(int &, int&, int&, int&) const;
     
     void init();
-    void paint();
+    bool paint();
+    
+    std::vector<std::vector<char> > state();
 };
 
 #endif

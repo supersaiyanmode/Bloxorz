@@ -2,6 +2,8 @@
 #define BOX_H
 
 class Box {
+    int row1, col1, row2, col2;
+    
     double posX, posY, posZ;
     double rotX, rotZ;
     double newPosX, newPosY, newPosZ;
@@ -16,12 +18,14 @@ public:
     ~Box();
     
     void init();
-    void paint();
+    bool paint();
     
     void moveLeft();
     void moveRight();
     void moveUp();
     void moveDown();
+    
+    void get(int&, int&, int&, int&);
 };
 
 #endif

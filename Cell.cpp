@@ -119,7 +119,7 @@ void Cell::setType(int t){
 }
     
 
-void Cell::paint(){
+bool Cell::paint(){
     glEnable(GL_DEPTH_TEST);
     glPushMatrix();
     glTranslated(posX, 0, posZ);
@@ -128,6 +128,7 @@ void Cell::paint(){
         drawBox(CELL_WIDTH,GL_QUADS);
     }
     glPopMatrix();
+    return false;
 }
 
 Cell::~Cell(){

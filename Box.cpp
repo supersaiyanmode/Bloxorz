@@ -85,34 +85,44 @@ namespace {
 
 extern double CELL_WIDTH;
 
-Box::Box(int r1, int c1, int r2, int c2):falling(false),animating(0){
+Box::Box(int r1, int c1, int r2, int c2):
+        row1(r1), col1(c1), row2(r2), col2(c2),
+        falling(false),animating(0){
+    init();
+}
+
+Box::~Box(){
+    
+}
+    
+void Box::init(){
     extern double CELL_WIDTH;
     //make the box!
-    if (r2 == -1){
-        //box = Box(r1*CELL_WIDTH, 0, c1*CELL_WIDTH, 0, 0, 0);
-        newPosX = posX = c1*CELL_WIDTH;
+    if (row2 == -1){
+        //box = Box(row1*CELL_WIDTH, 0, col1*CELL_WIDTH, 0, 0, 0);
+        newPosX = posX = col1*CELL_WIDTH;
         newPosY = posY = CELL_WIDTH*1.5;
-        newPosZ = posZ = r1*CELL_WIDTH;
+        newPosZ = posZ = row1*CELL_WIDTH;
         newRotX = rotX = 0;
         //newRotY = rotY = 0;
         newRotZ = rotZ = 0;
         newAlign = align = ALIGN_Y;
     }else{
-        if (r1==r2){
-            //box = Box(CELL_WIDTH*(c1+c2)/2.0, 0, CELL_WIDTH*r1, 0, 0, 90);
-            newPosX = posX = CELL_WIDTH*(c1+c2)/2.0;
+        if (row1==row2){
+            //box = Box(CELL_WIDTH*(col1+col2)/2.0, 0, CELL_WIDTH*row1, 0, 0, 90);
+            newPosX = posX = CELL_WIDTH*(col1+col2)/2.0;
             newPosY = posY = CELL_WIDTH;
-            newPosZ = posZ = r1*CELL_WIDTH;
+            newPosZ = posZ = row1*CELL_WIDTH;
             newRotX = rotX = 0;
             //newRotY = rotY = 0;
             newRotZ = rotZ = 90;
             newAlign = align = ALIGN_X;
         }
         else{
-            //box = Box(CELL_WIDTH*c1, 0, CELL_WIDTH*(r1+r2)/2.0, 90, 0, 0);
-            newPosX = posX = CELL_WIDTH*c1;
+            //box = Box(CELL_WIDTH*col1, 0, CELL_WIDTH*(row1+row2)/2.0, 90, 0, 0);
+            newPosX = posX = CELL_WIDTH*col1;
             newPosY = posY = CELL_WIDTH;
-            newPosZ = posZ = CELL_WIDTH*(r1+r2)/2.0;
+            newPosZ = posZ = CELL_WIDTH*(row1+row2)/2.0;
             newRotX = rotX = 90;
             //newRotY = rotY = 0;
             newRotZ = rotZ = 0;
@@ -121,33 +131,35 @@ Box::Box(int r1, int c1, int r2, int c2):falling(false),animating(0){
     }
 }
 
-Box::~Box(){
-    
-}
-    
-void Box::init(){
-    
-}
-
-void Box::paint(){
+bool Box::paint(){
     glPushMatrix();
+    const int ANIMATION_STEPS = 5;
+    bool stillInvalid;
     if (animating){
 #define X(A,B,r) ((A) + ((B)-(A))*(r))
-        glTranslated(X(posX,newPosX,animating/10.0),
-                     X(posY,newPosY,animating/10.0),
-                     X(posZ,newPosZ,animating/10.0));
-        glRotated(X(rotX,newRotX,animating/10.0), 1, 0, 0);
-        glRotated(X(rotZ,newRotZ,animating/10.0), 0, 0, 1);
+        glTranslated(X(posX,newPosX,double(animating)/ANIMATION_STEPS),
+                     X(posY,newPosY,double(animating)/ANIMATION_STEPS),
+                     X(posZ,newPosZ,double(animating)/ANIMATION_STEPS));
+        glRotated(X(rotX,newRotX,double(animating)/ANIMATION_STEPS), 1, 0, 0);
+        glRotated(X(rotZ,newRotZ,double(animating)/ANIMATION_STEPS), 0, 0, 1);
         glScaled(1,2,1);
         drawBox(CELL_WIDTH, GL_QUADS);
-        animating = (animating+1)%10;
+        animating = (animating+1)%ANIMATION_STEPS;
         if (!animating){
             posX = newPosX; posY = newPosY; posZ = newPosZ;
             rotX = newRotX; /*rotY = newRotY;*/ rotZ = newRotZ;
             align = newAlign;
             std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") | ";
             std::cout<<"["<<align<<"]\n";
+//             rotX += 360.0;
+//             while (rotX >= 360.0)
+//                 rotX -= 360.0;
+//             rotZ += 360.0;
+//             while (rotZ >= 360.0)
+//                 rotZ -= 360.0;
+            init();
         }
+        stillInvalid = true;
 #undef X
     }else{
         glTranslated(posX, posY, posZ);
@@ -155,8 +167,10 @@ void Box::paint(){
         glRotated(rotZ, 0, 0, 1);
         glScaled(1,2,1);
         drawBox(CELL_WIDTH, GL_QUADS);
+        stillInvalid = false;
     }
     glPopMatrix();
+    return stillInvalid;
 }
 
 
@@ -168,18 +182,26 @@ void Box::moveLeft(){
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ;
             newAlign = ALIGN_Y;
+            
+            col1 = std::min(col1, col2)-1;
+            row2 = col2 = -1;
             break;
         case ALIGN_Y:
             newPosX = posX - 1.5*CELL_WIDTH;
             newPosY = posY - 0.5*CELL_WIDTH;
             newPosZ = posZ;
             newAlign = ALIGN_X;
+            
+            col2 = --col1 - 1;
+            row2 = row1;
             break;
         case ALIGN_Z:
             newPosX = posX - CELL_WIDTH;
             newPosY = posY;
             newPosZ = posZ;
             newAlign = ALIGN_Z; //no change!
+            col1--;
+            col2--;
             break;
     }
     newRotX = rotX;
@@ -198,18 +220,27 @@ void Box::moveRight(){
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ;
             newAlign = ALIGN_Y;
+            
+            col1 = std::max(col1, col2) + 1;
+            row2 = col2 = -1;
             break;
         case ALIGN_Y:
             newPosX = posX + 1.5*CELL_WIDTH;
             newPosY = posY - 0.5*CELL_WIDTH;
             newPosZ = posZ;
             newAlign = ALIGN_X;
+            
+            col2 = ++col1 + 1;
+            row2 = row1;
             break;
         case ALIGN_Z:
             newPosX = posX + CELL_WIDTH;
             newPosY = posY;
             newPosZ = posZ;
             newAlign = ALIGN_Z; //no change!
+            
+            col1++;
+            col2++;
             break;
     }
     newRotX = rotX;
@@ -227,18 +258,27 @@ void Box::moveUp(){
             newPosY = posY;
             newPosZ = posZ - CELL_WIDTH;
             newAlign = ALIGN_X;
+            
+            row1--;
+            row2--;
             break;
         case ALIGN_Y:
             newPosX = posX;
             newPosY = posY - 0.5*CELL_WIDTH;
             newPosZ = posZ - 1.5*CELL_WIDTH;
             newAlign = ALIGN_Z;
+            
+            row2 = --row1 - 1;
+            col2 = col1;
             break;
         case ALIGN_Z:
             newPosX = posX;
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ - 1.5*CELL_WIDTH;
             newAlign = ALIGN_Y; //no change!
+            
+            row1 = std::min(row1,row2) - 1;
+            row2 = col2 = -1;
             break;
     }
     newRotX = rotX - 90;
@@ -257,18 +297,27 @@ void Box::moveDown(){
             newPosY = posY;
             newPosZ = posZ + CELL_WIDTH;
             newAlign = ALIGN_X;
+            
+            row1++;
+            row2++;
             break;
         case ALIGN_Y:
             newPosX = posX;
             newPosY = posY - 0.5*CELL_WIDTH;
             newPosZ = posZ + 1.5*CELL_WIDTH;
             newAlign = ALIGN_Z;
+            
+            row2 = ++row1 + 1;
+            col2 = col1;
             break;
         case ALIGN_Z:
             newPosX = posX;
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ + 1.5*CELL_WIDTH;
             newAlign = ALIGN_Y; //no change!
+            
+            row1 = std::max(row2,row1) + 1;
+            row2 = col2 = -1;
             break;
     }
     newRotX = rotX + 90;
@@ -277,4 +326,11 @@ void Box::moveDown(){
     std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
     std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
     std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
+}
+
+void Box::get(int&a, int&b, int&c, int&d){
+    a = row1;
+    b = col1;
+    c = row2;
+    d = col2;
 }

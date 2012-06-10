@@ -22,7 +22,7 @@ public:
     void setType(int);
     
     void init();
-    void paint();
+    bool paint();
 };
 
 #endif
