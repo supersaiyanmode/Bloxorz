@@ -251,10 +251,8 @@ void Box::moveRight(){
             newPosY = posY + 0.5*CELL_WIDTH;
             newPosZ = posZ;
             
-//             deltaFulcrumX = -CELL_WIDTH;
-//             deltaFulcrumY = -CELL_WIDTH/2.0;
-            deltaFulcrumX = -CELL_WIDTH/2.0;
-            deltaFulcrumY = -CELL_WIDTH;
+            deltaFulcrumX = CELL_WIDTH;
+            deltaFulcrumY = -CELL_WIDTH/2.0;
             deltaFulcrumZ = 0;//-CELL_WIDTH;
             
             newAlign = ALIGN_Y;
@@ -360,8 +358,8 @@ void Box::moveDown(){
             newPosY = posY;
             newPosZ = posZ + CELL_WIDTH;
             
-            deltaFulcrumX = CELL_WIDTH/2.0;
-            deltaFulcrumY = 0;//-CELL_WIDTH/2.0;
+            deltaFulcrumX = 0;//CELL_WIDTH/2.0;
+            deltaFulcrumY = -CELL_WIDTH/2.0;
             deltaFulcrumZ = CELL_WIDTH/2.0;
             
             newAlign = ALIGN_X;
@@ -390,7 +388,7 @@ void Box::moveDown(){
             
             deltaFulcrumX = 0;
             deltaFulcrumY = -CELL_WIDTH/2.0;
-            deltaFulcrumZ = CELL_WIDTH*1.5; //EXTRA MINUS
+            deltaFulcrumZ = CELL_WIDTH; //EXTRA MINUS
             
             newAlign = ALIGN_Y; //no change!
             
