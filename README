@@ -1,0 +1,55 @@
+BLOXORZ GAME
+============
+
+This is a small game written in C++ using OpenGL libraries. The object is to
+make the box fall down into the hole without falling off the edges.
+
+
+DEPENDS ON
+==========
+
+This game depends on GLFW libraries. Download the libraries from the below:
+
+    http://www.glfw.org/download.html
+    
+    
+GETTING THE SOURCE
+==================
+
+To get the source through git, type
+
+    git clone https://thrustmaster@bitbucket.org/thrustmaster/bloxorz.git
+    
+Or visit:
+
+    https://bitbucket.org/thrustmaster/bloxorz
+    
+
+BUILDING
+========
+
+  (On linux)
+
+    g++ -w *.cpp soil/*.c `pkg-config --libs libglfw` -lGLU -lGL -lXrandr
+    
+  (On Windows)
+  
+    g++ -w *.cpp soil/*.c -lglfw -lglu32 -lOpengl32 -lgdi32
+    
+
+BLOXORZ MAP
+===========
+
+The game (as of now) reads the map from the file named "map.txt" located in the
+working directory. The map file is essentially represented using the following
+ASCII characters:
+    
+    .           A bad cell; those cells which are 'outside' the floor of the
+                game.
+    +           The main block. Single '+' in the map implies the block is
+                standing vertically. Two adjacent '+'es imply a horizontal
+                block
+    <space>     The hole in which the block must fall into to finish the game.
+    
+The map must be surrounded with two layers of bad cells ('.' cells). Look into
+the map that comes with the source code.
