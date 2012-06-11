@@ -158,10 +158,9 @@ void Box::init(){
 bool Box::paint(){
 #define X(A,B,r) ((A) + ((B)-(A))*(r))
     glPushMatrix();
-    const int ANIMATION_STEPS = 10;
     bool stillInvalid;
     if (falling){
-        if (falling != ANIMATION_STEPS*10){
+        if (falling != ANIMATION_STEPS*2){
             glTranslated(posX, X(posY,posY-5.0, double(falling)/ANIMATION_STEPS), posZ);
             glScaled(1,2,1);
             drawBox(CELL_WIDTH, GL_QUADS);
@@ -192,7 +191,6 @@ bool Box::paint(){
             init();
         }
         stillInvalid = true;
-#undef X
     }else{
         glTranslated(posX, posY, posZ);
         glScaled(1+(align==ALIGN_X),1+(align==ALIGN_Y),1+(align==ALIGN_Z));
@@ -423,4 +421,8 @@ void Box::get(int&a, int&b, int&c, int&d){
     b = col1;
     c = row2;
     d = col2;
+}
+
+double Box::getXLocation(){
+    return X(posX, newPosX, double(animating)/ANIMATION_STEPS);
 }

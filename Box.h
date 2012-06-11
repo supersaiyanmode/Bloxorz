@@ -16,6 +16,7 @@ class Box {
     int animating; //0 if not animating, else progress [1-10]
     
     
+    enum {ANIMATION_STEPS = 20};
     enum Alignment{ALIGN_X, ALIGN_Y, ALIGN_Z} align, newAlign;
     
     Game* game;
@@ -33,6 +34,7 @@ public:
     void moveDown();
     
     void get(int&, int&, int&, int&);
+    double getXLocation();
 };
 
 #endif

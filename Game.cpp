@@ -1,12 +1,17 @@
 #include <GL/glfw.h>
+#include <GL/glext.h>
 #include <math.h>
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 #include "Game.h"
 
 Game::Game(const std::string& file, int w, int h):
             invalid(true),windowWidth(w), windowHeight(h),moves(0),
             mapFile(file), map(file),box(0,0,0,1,this){
+
+    glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
+    
     if (!glfwInit() || !glfwOpenWindow(windowWidth,windowHeight, 8,8,8,8,24,0,GLFW_WINDOW)){
         glfwTerminate();
         throw 1;
@@ -24,6 +29,7 @@ BloxorzMap& Game::getMap(){
 void Game::init(){
     std::cout<<"Initiating..";
     float aspectRatio = double(windowWidth)/windowHeight;
+    moves = 0;
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -33,6 +39,13 @@ void Game::init(){
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
     glFrontFace(GL_CW);
+    glEnable(GL_POLYGON_SMOOTH);
+    glEnable(GL_LINE_SMOOTH);
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_MULTISAMPLE_ARB);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
  
     int r1,c1,r2,c2;
     map.init();
@@ -92,7 +105,7 @@ bool Game::paint(){
     angle += 0.01;
     stillInvalid = true;
 #else
-    gluLookAt(7, 12, 28, 7, 0, 0, 0, 1, 0);
+    gluLookAt(box.getXLocation(), 12, 30, box.getXLocation()+5, 0, -10, 0, 1, 0);
 #endif
     if (map.paint() && !stillInvalid){
         stillInvalid = true;
@@ -100,6 +113,9 @@ bool Game::paint(){
         if (box.paint() && !stillInvalid)
             stillInvalid = true;
     }
+    std::stringstream ss;
+    ss<<"Bloxorz [Moves: "<<moves<<"]";
+    glfwSetWindowTitle(ss.str().c_str());
 
     return stillInvalid;
 }
