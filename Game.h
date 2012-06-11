@@ -17,9 +17,17 @@ public:
     Game(const std::string&, int, int);
     ~Game();
     
+    BloxorzMap& getMap();
+    
+    void load(); //typically the animation of the map
+    void unload();
+    void over(int); //param is the status of gameover..
+    
+    
     void init();
     void loop();
     bool paint(); //returns if its still invalid..
+    void invalidate();
     void processKeys();
 };
 

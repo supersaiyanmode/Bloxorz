@@ -6,7 +6,7 @@
 
 Game::Game(const std::string& file, int w, int h):
             invalid(true),windowWidth(w), windowHeight(h),moves(0),
-            mapFile(file), map(file),box(0,0,0,1){
+            mapFile(file), map(file),box(0,0,0,1,this){
     if (!glfwInit() || !glfwOpenWindow(windowWidth,windowHeight, 8,8,8,8,24,0,GLFW_WINDOW)){
         glfwTerminate();
         throw 1;
@@ -17,7 +17,12 @@ Game::~Game(){
     glfwTerminate();
 }
 
+
+BloxorzMap& Game::getMap(){
+    return map;
+}
 void Game::init(){
+    std::cout<<"Initiating..";
     float aspectRatio = double(windowWidth)/windowHeight;
     
     glMatrixMode(GL_PROJECTION);
@@ -27,12 +32,16 @@ void Game::init(){
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
+    glFrontFace(GL_CW);
  
     int r1,c1,r2,c2;
     map.init();
     map.getBox(r1,c1,r2,c2);
-    box = Box(r1,c1,r2,c2);
+    box = Box(r1,c1,r2,c2,this);
     box.init();
+    
+    load();
+    invalidate();
 }
 
 void Game::loop(){
@@ -67,21 +76,30 @@ void Game::loop(){
     }
 }
 
+
+void Game::invalidate(){
+    invalid = true;
+    std::cout<<"INVALIDATEDD!!\n";
+}
 bool Game::paint(){
+    bool stillInvalid = false;
+    
     glLoadIdentity();
 #if 0
     static double angle = 0.0, radius=25;
     double lookX = 10, lookY=0, lookZ=10;
     gluLookAt(lookX + radius*cos(angle),15,lookZ + radius*sin(angle), lookX, lookY, lookZ, 0,1,0);
     angle += 0.01;
+    stillInvalid = true;
 #else
     gluLookAt(7, 12, 28, 7, 0, 0, 0, 1, 0);
 #endif
-    bool stillInvalid = false;;
-    if (1 && map.paint())
+    if (map.paint() && !stillInvalid){
         stillInvalid = true;
-    if (box.paint())
-        stillInvalid = true;
+    }else{
+        if (box.paint() && !stillInvalid)
+            stillInvalid = true;
+    }
 
     return stillInvalid;
 }
@@ -113,3 +131,20 @@ void Game::processKeys(){
     }
 }
 
+void Game::load(){
+    map.load();
+}
+void Game::unload(){
+    map.unload();
+}
+
+void Game::over(int status){
+    if (status == 1){ //WIN!!
+        std::cout<<"WIN!!\n";
+        init();
+        //may be more stuff here.. like load next level???
+    }else{
+        std::cout<<"YOU FELL OFF!!\n";
+        init();
+    }
+}

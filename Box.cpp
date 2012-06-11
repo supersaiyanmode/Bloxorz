@@ -5,8 +5,9 @@
 #include <stdlib.h>
 #include <GL/gl.h>
 
-#include "Box.h"
 #include "soil/SOIL.h"
+
+#include "Game.h"
 
 namespace {
     bool fileExists(std::string fileName){
@@ -72,12 +73,12 @@ namespace {
     void drawBox(GLfloat size, GLenum type){
         glDisable(GL_TEXTURE_2D);
         
-        glBegin(GL_LINES);
+        /*glBegin(GL_LINES);
             glColor3f(1,0,0);   glVertex3f(0,0,0); glVertex3f(100,0,0);
             glColor3f(0,1,0);   glVertex3f(0,0,0); glVertex3f(0,100,0);
             glColor3f(0,0,1);glVertex3f(0,0,0); glVertex3f(0,0,1000);
         glEnd();
-        glColor3f(1,1,1);
+        glColor3f(1,1,1);*/
         glEnable(GL_TEXTURE_2D);
         for (int i = 5; i >= 0; i--) {
             glBindTexture(GL_TEXTURE_2D, loadTexture("images/BoxTexture.bmp"));
@@ -94,21 +95,29 @@ namespace {
 
 extern double CELL_WIDTH;
 
-Box::Box(int r1, int c1, int r2, int c2):
+Box::Box(int r1, int c1, int r2, int c2,Game* g):
         row1(r1), col1(c1), row2(r2), col2(c2),
-        falling(false),animating(0){
-    init();
+        falling(false),animating(0),
+        game(g){
 }
 
 Box::~Box(){
     
 }
-    
+
 void Box::init(){
     extern double CELL_WIDTH;
-    //make the box!
+
     if (row2 == -1){
-        //box = Box(row1*CELL_WIDTH, 0, col1*CELL_WIDTH, 0, 0, 0);
+        //check for bad position..
+        if (col1 < 0 || row1 < 0 || game->getMap().get(row1,col1).type()==CELL_BAD){
+            std::cout<<"STEPPED ON WRONG CELL!!!!\n";
+            game->over(0);
+            return;
+        }else if (game->getMap().get(row1,col1).type()==CELL_HOLE){
+            std::cout<<"WIN!!\n";
+            falling = true;
+        }
         newPosX = posX = col1*CELL_WIDTH;
         newPosY = posY = CELL_WIDTH*1.5;
         newPosZ = posZ = row1*CELL_WIDTH;
@@ -117,6 +126,12 @@ void Box::init(){
         newRotZ = rotZ = 0;
         newAlign = align = ALIGN_Y;
     }else{
+        std::cout<<"$$"<<row2<<" "<<col2<<"$$\n";
+        if (game->getMap().get(row1,col1).type()==CELL_BAD || 
+                    game->getMap().get(row2,col2).type()==CELL_BAD){
+            game->unload();
+            game->init();
+        }
         if (row1==row2){
             //box = Box(CELL_WIDTH*(col1+col2)/2.0, 0, CELL_WIDTH*row1, 0, 0, 90);
             newPosX = posX = CELL_WIDTH*(col1+col2)/2.0;
@@ -141,22 +156,25 @@ void Box::init(){
 }
 
 bool Box::paint(){
-    glPushMatrix();
-    const int ANIMATION_STEPS = 50;
-    bool stillInvalid;
-    if (animating){
 #define X(A,B,r) ((A) + ((B)-(A))*(r))
-        /*glTranslated(X(posX,newPosX,double(animating)/ANIMATION_STEPS),
-                     X(posY,newPosY,double(animating)/ANIMATION_STEPS),
-                     X(posZ,newPosZ,double(animating)/ANIMATION_STEPS));
-        glRotated(X(rotX,newRotX,double(animating)/ANIMATION_STEPS), 1, 0, 0);
-        glRotated(X(rotZ,newRotZ,double(animating)/ANIMATION_STEPS), 0, 0, 1);*/
+    glPushMatrix();
+    const int ANIMATION_STEPS = 10;
+    bool stillInvalid;
+    if (falling){
+        if (falling != ANIMATION_STEPS*10){
+            glTranslated(posX, X(posY,posY-5.0, double(falling)/ANIMATION_STEPS), posZ);
+            glScaled(1,2,1);
+            drawBox(CELL_WIDTH, GL_QUADS);
+            stillInvalid = true;
+            falling++;
+        }else{
+            game->over(1);
+            stillInvalid = false;
+        }
+    }else if (animating){
         
         glTranslated(posX, posY, posZ);
-//         glTranslated(X(posX,newPosX,double(animating)/ANIMATION_STEPS),
-//                      X(posY,newPosY,double(animating)/ANIMATION_STEPS),
-//                      X(posZ,newPosZ,double(animating)/ANIMATION_STEPS));
-        
+
         glTranslated(deltaFulcrumX, deltaFulcrumY, deltaFulcrumZ);
         glRotated(X(0,newRotX-rotX,double(animating)/ANIMATION_STEPS), 1, 0, 0);
         glRotated(X(0,newRotZ-rotZ,double(animating)/ANIMATION_STEPS), 0, 0, 1);
@@ -164,23 +182,19 @@ bool Box::paint(){
         
         glScaled(1+(align==ALIGN_X),1+(align==ALIGN_Y),1+(align==ALIGN_Z));
         drawBox(CELL_WIDTH, GL_QUADS);
-        animating = (animating+1)%ANIMATION_STEPS;
+        animating++;
+        if (animating == ANIMATION_STEPS + 1)
+            animating = 0;
+        
         if (!animating){
-            /*posX = newPosX; posY = newPosY; posZ = newPosZ;
-            rotX = newRotX; rotZ = newRotZ;
-            init();
-            align = newAlign;*/
             std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") | ";
             std::cout<<"("<<deltaFulcrumX<<","<<deltaFulcrumY<<","<<deltaFulcrumZ<<") | ";
             init();
-            stillInvalid = false;
-        }else
-            stillInvalid = true;
+        }
+        stillInvalid = true;
 #undef X
     }else{
         glTranslated(posX, posY, posZ);
-        //glRotated(rotX, 1, 0, 0);
-        //glRotated(rotZ, 0, 0, 1);
         glScaled(1+(align==ALIGN_X),1+(align==ALIGN_Y),1+(align==ALIGN_Z));
         drawBox(CELL_WIDTH, GL_QUADS);
         stillInvalid = false;
