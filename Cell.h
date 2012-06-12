@@ -7,7 +7,8 @@ enum CellType{
     CELL_BAD=0,
     CELL_HOLE=1,
     CELL_FLOOR=2,
-    CELL_SWITCH=4
+    CELL_SWITCH=4,
+    CELL_BRIDGE=8
 };
 
 class Cell {    
