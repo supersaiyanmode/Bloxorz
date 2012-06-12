@@ -174,3 +174,13 @@ std::vector<std::vector<char> > BloxorzMap::state(){
     }
     return res;
 }
+
+double BloxorzMap::width() const{
+    extern double CELL_WIDTH;
+    return map[0].size()*CELL_WIDTH;
+}
+
+double BloxorzMap::height() const{
+    extern double CELL_WIDTH;
+    return map.size()*CELL_WIDTH;
+}

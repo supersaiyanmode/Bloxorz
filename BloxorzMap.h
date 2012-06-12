@@ -26,6 +26,9 @@ public:
     void init();
     bool paint();
     
+    double width() const;
+    double height() const;
+    
     std::vector<std::vector<char> > state();    //return the state of the map and box.
 };
 
