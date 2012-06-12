@@ -100,7 +100,8 @@ bool Game::paint(){
     
     glLoadIdentity();
     
-    gluLookAt(box.getXLocation(), 12, 30, box.getXLocation()+5, 0, -10, 0, 1, 0);
+    //gluLookAt(box.getXLocation(), 18, 35, box.getXLocation()+5, 0, 10, 0, 1, 0);
+    gluLookAt(map.width()/2.0-18.0, 18, 40, map.width()/2.0, 0, 10, 0, 1, 0);
 
     if (map.paint() && !stillInvalid){
         stillInvalid = true;
