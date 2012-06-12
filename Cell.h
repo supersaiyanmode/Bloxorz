@@ -12,11 +12,11 @@ enum CellType{
 
 class Cell {    
     int cellType;
-    double initPosX, initPosY, initPosZ;
-    double newPosX, newPosY, newPosZ;
+    double initPosX, initPosY, initPosZ; //Initial position before animation of cells.
+    double newPosX, newPosY, newPosZ;   //final position
     
     int loading; //count from 1 to 10;
-    int loadingDir;
+    int loadingDir; //loading or unloading
     
     static bool useGLList;
     static GLuint cellFloorList;
@@ -32,7 +32,7 @@ public:
     void load();
     void unload();
     
-    static void setUseList(bool);
+    static void setUseList(bool);       //do not use GLlist when the eniter map can be one list
     
     int type() const;
     void setType(int);

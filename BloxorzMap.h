@@ -7,9 +7,9 @@
 #include "Box.h"
 
 class BloxorzMap {
-    int loading;
+    int loading;        //loading 0 - steps, for initial animation of maps
     
-    GLuint mapList;
+    GLuint mapList;     //GL list for drawing the map
     
     std::string mapFile;
     std::vector<std::string> mapStr;
@@ -17,8 +17,8 @@ class BloxorzMap {
 public:
     BloxorzMap(const std::string&);
     
-    Cell get(int, int) const;
-    void getBox(int &, int&, int&, int&) const;
+    Cell get(int, int) const;   //Get the cell at location r,c
+    void getBox(int &, int&, int&, int&) const; //get the location of the box
     
     void load(); //animation
     void unload();
@@ -26,7 +26,7 @@ public:
     void init();
     bool paint();
     
-    std::vector<std::vector<char> > state();
+    std::vector<std::vector<char> > state();    //return the state of the map and box.
 };
 
 #endif

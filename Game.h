@@ -7,7 +7,7 @@
 #include "Box.h"
 
 class Game{
-    bool invalid;
+    bool invalid, mustInit;
     int windowWidth, windowHeight;
     int moves;
     std::string mapFile;
@@ -22,7 +22,7 @@ public:
     void load(); //typically the animation of the map
     void unload();
     void over(int); //param is the status of gameover..
-    
+    void requestInit();
     
     void init();
     void loop();
@@ -31,4 +31,4 @@ public:
     void processKeys();
 };
 
-#endif 
+#endif

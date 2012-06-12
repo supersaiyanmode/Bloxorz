@@ -8,37 +8,9 @@
 #include "soil/SOIL.h"
 
 #include "Game.h"
+#include "loadTexture.h"
 
 namespace {
-    bool fileExists(std::string fileName){
-        FILE* img = NULL;
-        img = fopen(fileName.c_str(),"rb");
-        if (img) return fclose(img),true;
-        return false;
-    }
-    GLuint loadTexture(std::string s){
-        if (!fileExists(s)){
-            std::cout<<"Image file: "<<s<<" doesn't exist!"<<std::endl;
-            exit(1);
-        }
-        //use a static map!
-        static std::map<std::string, GLuint> textureMap;
-        if (textureMap.find(s) != textureMap.end())
-            return textureMap[s];
-            
-        GLuint texture = SOIL_load_OGL_texture(s.c_str(),SOIL_LOAD_AUTO,SOIL_CREATE_NEW_ID,
-                SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-                SOIL_FLAG_COMPRESS_TO_DXT
-            );
-        glBindTexture( GL_TEXTURE_2D, texture ); //bind the texture to it's array
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-        std::cout<<"Loaded texture: "<<s<<std::endl;
-        //add to map
-        textureMap[s] = texture;
-        return texture;
-    }
-    
     const GLfloat n[6][3]= {  /* Normals for the 6 faces of a cube. */
         {-1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0},
         {0.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 0.0, -1.0}
@@ -106,6 +78,7 @@ Box::~Box(){
 }
 
 void Box::init(){
+    std::cout<<"BOX::INIT() CALLED\n";
     extern double CELL_WIDTH;
 
     if (row2 == -1){
@@ -118,37 +91,32 @@ void Box::init(){
             std::cout<<"WIN!!\n";
             falling = true;
         }
+        
         newPosX = posX = col1*CELL_WIDTH;
         newPosY = posY = CELL_WIDTH*1.5;
         newPosZ = posZ = row1*CELL_WIDTH;
-        newRotX = rotX = 0;
-        //newRotY = rotY = 0;
+
         newRotZ = rotZ = 0;
         newAlign = align = ALIGN_Y;
     }else{
-        std::cout<<"$$"<<row2<<" "<<col2<<"$$\n";
         if (game->getMap().get(row1,col1).type()==CELL_BAD || 
                     game->getMap().get(row2,col2).type()==CELL_BAD){
-            game->unload();
-            game->init();
+            game->requestInit();
+            std::cout<<"GAME::INIT() CALLED!\n";
         }
         if (row1==row2){
-            //box = Box(CELL_WIDTH*(col1+col2)/2.0, 0, CELL_WIDTH*row1, 0, 0, 90);
             newPosX = posX = CELL_WIDTH*(col1+col2)/2.0;
             newPosY = posY = CELL_WIDTH;
             newPosZ = posZ = row1*CELL_WIDTH;
             newRotX = rotX = 0;
-            //newRotY = rotY = 0;
             newRotZ = rotZ = 90;
             newAlign = align = ALIGN_X;
         }
         else{
-            //box = Box(CELL_WIDTH*col1, 0, CELL_WIDTH*(row1+row2)/2.0, 90, 0, 0);
             newPosX = posX = CELL_WIDTH*col1;
             newPosY = posY = CELL_WIDTH;
             newPosZ = posZ = CELL_WIDTH*(row1+row2)/2.0;
             newRotX = rotX = 90;
-            //newRotY = rotY = 0;
             newRotZ = rotZ = 0;
             newAlign = align = ALIGN_Z;
         }
@@ -164,10 +132,11 @@ bool Box::paint(){
             glTranslated(posX, X(posY,posY-5.0, double(falling)/ANIMATION_STEPS), posZ);
             glScaled(1,2,1);
             drawBox(CELL_WIDTH, GL_QUADS);
-            stillInvalid = true;
             falling++;
+            stillInvalid = true;
         }else{
             game->over(1);
+            falling = 0;
             stillInvalid = false;
         }
     }else if (animating){
@@ -186,8 +155,8 @@ bool Box::paint(){
             animating = 0;
         
         if (!animating){
-            std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") | ";
-            std::cout<<"("<<deltaFulcrumX<<","<<deltaFulcrumY<<","<<deltaFulcrumZ<<") | ";
+            //std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") | ";
+            //std::cout<<"("<<deltaFulcrumX<<","<<deltaFulcrumY<<","<<deltaFulcrumZ<<") | ";
             init();
         }
         stillInvalid = true;
@@ -250,9 +219,9 @@ void Box::moveLeft(){
     newRotX = rotX;
     //newRotY = rotY;
     newRotZ = rotZ + 90;
-    std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
-    std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
-    std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
+    //std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
+    //std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
+    //std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
 }
 
 void Box::moveRight(){
@@ -304,9 +273,9 @@ void Box::moveRight(){
     newRotX = rotX;
     //newRotY = rotY;
     newRotZ = rotZ - 90;
-    std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
-    std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
-    std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
+    //std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
+    //std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
+    //std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
 }
 void Box::moveUp(){
     animating = 1;
@@ -357,9 +326,9 @@ void Box::moveUp(){
     newRotX = rotX - 90;
     //newRotY = rotY;
     newRotZ = rotZ;
-    std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
-    std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
-    std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
+    //std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
+    //std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
+    //std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
 }
 
 void Box::moveDown(){
@@ -411,9 +380,9 @@ void Box::moveDown(){
     newRotX = rotX + 90;
     //newRotY = rotY;
     newRotZ = rotZ;
-    std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
-    std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
-    std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
+    //std::cout<<"("<<posX<<","<<posY<<","<<posZ<<") -> ";
+    //std::cout<<"("<<newPosX<<","<<newPosY<<","<<newPosZ<<") | ";
+    //std::cout<<"["<<align<<"] -> ["<<newAlign<<"]\n";
 }
 
 void Box::get(int&a, int&b, int&c, int&d){

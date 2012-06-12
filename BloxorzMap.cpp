@@ -2,7 +2,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iostream>
-
+#include <cstdio>
 #include <GL/gl.h>
 
 #include "BloxorzMap.h"
@@ -71,13 +71,26 @@ void BloxorzMap::getBox(int& r1, int& c1, int& r2, int& c2) const{
 void BloxorzMap::init(){
     map = std::vector<std::vector<Cell> >();
     
+    //Read the file and load the map from it.
     std::ifstream file(mapFile.c_str());
+    if (file.bad()){
+        std::cout<<"Map file does not exist.\n";
+        std::exit(1);
+    }
     std::stringstream ss;
     ss<<file.rdbuf();
     mapStr = splitString(ss.str(),"\n");
     std::transform(mapStr.begin(), mapStr.end(), mapStr.begin(), trimString);
     
-    //const std::string VALID_CHARS = " X+.";
+    //pad the map with bad cells.
+    for (std::vector<std::string>::iterator it=mapStr.begin(); it!=mapStr.end(); it++){
+        *it = ".." + *it + "..";
+    }
+    std::string border(mapStr[0].size(),'.');        //2 '.' on either side to pad.
+    mapStr.insert(mapStr.begin(), 2, border);
+    mapStr.insert(mapStr.end(), 2, border);
+    
+    
     
     for (int i=0, len1=mapStr.size(); i<len1; i++){
         std::vector<Cell> row;
@@ -86,6 +99,8 @@ void BloxorzMap::init(){
         }
         map.push_back(row);
     }
+    
+    //throw 0;
     
     for (std::vector<std::vector<Cell> >::iterator it1=map.begin(); it1!= map.end(); it1++){
         for (std::vector<Cell>::iterator it2=it1->begin(); it2!=it1->end(); it2++){
@@ -98,8 +113,11 @@ void BloxorzMap::init(){
 
 bool BloxorzMap::paint(){
     bool stillInvalid = false;
+    
+    //If not loading, go ahead make a list.
     if (!loading){
-        if (!mapList){
+        if (!mapList){  //does the list exist?
+            //create the list.
             Cell::setUseList(false);
             mapList = glGenLists(1);
             glNewList(mapList, GL_COMPILE_AND_EXECUTE);
@@ -111,13 +129,13 @@ bool BloxorzMap::paint(){
                     }
                 }
             glEndList();
-            std::cout<<"List compiled!\n";
+            //std::cout<<"List compiled!\n";
         }else{
-            std::cout<<"Calling list..\n";
+            //std::cout<<"Calling list..\n";
             glCallList(mapList);
         }
     }else{
-        std::cout<<"Loading ..\n";
+        //std::cout<<"Loading ..\n";
         for (std::vector<std::vector<Cell> >::iterator it1=map.begin(); it1!= map.end();
                                 it1++){
             for (std::vector<Cell>::iterator it2=it1->begin(); it2!=it1->end(); it2++){
@@ -136,7 +154,7 @@ void BloxorzMap::load(){
     Cell::setUseList(true);
 }
 void BloxorzMap::unload(){
-    std::cout<<"UNLOADING...\n";
+    //std::cout<<"UNLOADING...\n";
     loading = -1;
 }
 

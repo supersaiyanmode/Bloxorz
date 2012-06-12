@@ -8,41 +8,13 @@
 
 #include "soil/SOIL.h"
 #include "Cell.h"
+#include "loadTexture.h"
 
 GLuint Cell::cellFloorList = 0;
 bool Cell::useGLList = true;
 
 extern double CELL_WIDTH;
-namespace {
-    bool fileExists(std::string fileName){
-        FILE* img = NULL;
-        img = fopen(fileName.c_str(),"rb");
-        if (img) return fclose(img),true;
-        return false;
-    }
-    GLuint loadTexture(std::string s){
-        if (!fileExists(s)){
-            std::cout<<"Image file: "<<s<<" doesn't exist!"<<std::endl;
-            exit(1);
-        }
-        //use a static map!
-        static std::map<std::string, GLuint> textureMap;
-        if (textureMap.find(s) != textureMap.end())
-            return textureMap[s];
-            
-        GLuint texture = SOIL_load_OGL_texture(s.c_str(),SOIL_LOAD_AUTO,SOIL_CREATE_NEW_ID,
-                SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-                SOIL_FLAG_COMPRESS_TO_DXT
-            );
-        glBindTexture( GL_TEXTURE_2D, texture ); //bind the texture to it's array
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-        std::cout<<"Loaded texture: "<<s<<std::endl;
-        //add to map
-        textureMap[s] = texture;
-        return texture;
-    }
-    
+namespace {    
     const GLfloat n[6][3]= {  /* Normals for the 6 faces of a cube. */
         {-1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0},
         {0.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 0.0, -1.0}
@@ -112,6 +84,7 @@ Cell::Cell(char t, int rowNo, int colNo){
     }
     cellType = it->second;
     
+    //random location to have the raise-up animation during start up.
     newPosX = initPosX = colNo * CELL_WIDTH;
     initPosY = -5.0 - rand()%5;
     newPosZ = initPosZ = rowNo * CELL_WIDTH;
